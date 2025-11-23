@@ -27,9 +27,10 @@ func initDB() {
 	if err != nil {
 		panic("❌ Failed to connect to database")
 	}
-	// 🚀 修改这里：添加 &models.Question{} 到自动迁移列表
-	db.AutoMigrate(&models.User{}, &models.Question{})
-	fmt.Println("✅ Database migrated: Users & Questions")
+	// 🚀 添加 &models.Announcement{}
+	db.AutoMigrate(&models.User{}, &models.Question{}, &models.Announcement{})
+	fmt.Println("✅ Database migrated: Users, Questions & Announcements")
+	
 }
 
 // 注册接口
@@ -131,6 +132,16 @@ func getQuestions(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": questions, "total": len(questions)})
 }
 
+func getQuestion(c *gin.Context) {
+	id := c.Param("id")
+	var question models.Question
+	if err := db.First(&question, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
+		return
+	}
+	c.JSON(http.StatusOK, question)
+}
+
 // 更新题目
 func updateQuestion(c *gin.Context) {
 	id := c.Param("id")
@@ -162,6 +173,66 @@ func deleteQuestion(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Deleted successfully"})
 }
 
+// --- 公告管理接口 ---
+
+// 发布公告
+func createAnnouncement(c *gin.Context) {
+	var input models.Announcement
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// 默认状态为发布
+	input.Status = true
+
+	if err := db.Create(&input).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create announcement"})
+		return
+	}
+	c.JSON(http.StatusOK, input)
+}
+
+// 获取公告列表 (按时间倒序)
+func getAnnouncements(c *gin.Context) {
+	var list []models.Announcement
+	// 简单起见，取最近 50 条
+	db.Order("created_at desc").Limit(50).Find(&list)
+	c.JSON(http.StatusOK, gin.H{"data": list})
+}
+
+// 删除公告
+func deleteAnnouncement(c *gin.Context) {
+	id := c.Param("id")
+	if err := db.Delete(&models.Announcement{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Deleted successfully"})
+}
+
+// --- 仪表盘接口 ---
+
+// 获取统计数据
+func getDashboardStats(c *gin.Context) {
+	var userCount int64
+	var questionCount int64
+	var latestAnnouncement models.Announcement
+
+	// 并发查询（虽然这里简单的顺序执行也够快）
+	db.Model(&models.User{}).Count(&userCount)
+	db.Model(&models.Question{}).Count(&questionCount)
+	
+	// 获取最新一条公告
+	db.Order("created_at desc").First(&latestAnnouncement)
+
+	c.JSON(http.StatusOK, gin.H{
+		"user_count":     userCount,
+		"question_count": questionCount,
+		"announcement":   latestAnnouncement,
+	})
+}
+
 func main() {
 	initDB()
 	r := gin.Default()
@@ -178,6 +249,7 @@ func main() {
 		c.Next()
 	})
 
+
 	r.POST("/register", register)
 	r.POST("/login", login)
 
@@ -186,8 +258,16 @@ func main() {
 	{
 		api.POST("/questions", createQuestion)
 		api.GET("/questions", getQuestions)
+		// 👇 新增这一行
+		api.GET("/questions/:id", getQuestion) 
 		api.PUT("/questions/:id", updateQuestion)
 		api.DELETE("/questions/:id", deleteQuestion)
+
+		api.POST("/announcements", createAnnouncement)
+		api.GET("/announcements", getAnnouncements)
+		api.DELETE("/announcements/:id", deleteAnnouncement)
+
+		api.GET("/dashboard/stats", getDashboardStats)
 	}
 
 	r.Run(":8080")

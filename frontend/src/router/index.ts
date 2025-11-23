@@ -32,9 +32,14 @@ const router = createRouter({
           component: () => import('../views/QuestionCreateView.vue')
         },
         {
+          path: 'questions/edit/:id',
+          name: 'question-edit',
+          component: () => import('../views/QuestionCreateView.vue')
+        },
+{
           path: 'announcements',
           name: 'announcements',
-          component: () => import('../views/DashboardView.vue') // 暂时先用 Dashboard 顶替
+          component: () => import('../views/AnnouncementView.vue')
         },
          {
           path: 'users',

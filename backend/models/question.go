@@ -1,27 +1,34 @@
 package models
 
 import (
+	"time"
 	"gorm.io/gorm"
 )
 
 type Question struct {
-	gorm.Model
+	// ❌ 删除 gorm.Model
+	// gorm.Model 
+
+	// ✅ 手动定义这4个字段，并加上 json tag
+	ID        uint           `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"` // json:"-" 表示不返回给前端
+
+	// --- 下面是你原本的业务字段 ---
+
 	// 类别
 	Category string `json:"category" gorm:"type:varchar(100)"`
 
-	// 🚀 改动 1: 使用 ENUM 类型
-	// 限制只能是单选(single_choice)、多选(multiple_choice)或判断(judgment)
+	// 题型
 	QuestionType string `json:"question_type" gorm:"type:enum('single_choice','multiple_choice','judgment');default:'single_choice'"`
 
-	// 🚀 改动 2: 使用 TEXT 类型
-	// 这里的文本可能会很长
+	// 题目内容
 	QuestionText string `json:"question_text" gorm:"type:text"`
 
-	// 🚀 改动 3: 显式指定为 JSON 类型
-	// serializer:json 会让 GORM 自动把 Go 的 map 转换成 JSON 字符串存入
-	// type:json 告诉 MySQL 使用原生的 JSON 数据类型
+	// 选项
 	Options map[string]string `json:"options" gorm:"type:json;serializer:json"`
 
-	// 答案也存为 JSON 数组
+	// 答案
 	Answer []string `json:"answer" gorm:"type:json;serializer:json"`
 }

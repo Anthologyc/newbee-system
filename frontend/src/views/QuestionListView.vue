@@ -12,7 +12,7 @@
         <a-button type="primary" @click="fetchQuestions">查询</a-button>
         <a-button type="outline" @click="goCreate">录入题目</a-button>
       </div>
-      
+
       <a-table :columns="columns" :data="questions" row-key="id" :pagination="false">
         <!-- ⚠️ 注意：这里必须用 record，不能用 row -->
         <template #options="{ record }">
@@ -82,7 +82,9 @@ const fetchQuestions = async () => {
 };
 
 const goCreate = () => router.push({ name: 'question-create' });
-const edit = (id: number) => { /* TODO */ };
+const edit = (id: number) => {
+  router.push({ name: 'question-edit', params: { id } });
+};
 const del = async (id: number) => {
   await axios.delete(`/api/questions/${id}`);
   fetchQuestions();
