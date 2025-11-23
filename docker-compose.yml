@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Go 后端服务
+  backend:
+    build: ./backend
+    container_name: go-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy # <--- 关键修改：等待 MySQL 健康检查通过
+      redis:
+        condition: service_started
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=myapp
+      - REDIS_ADDR=redis:6379
+
+  # Vue 前端服务 (开发阶段建议使用 Node 容器，部署阶段用 Nginx)
+  frontend:
+    build: ./frontend
+    container_name: vue-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: myapp
+    ports:
+      - "3307:3306" # <--- 修改这里，把左边的 3306 改成 3307
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Redis 缓存
+  redis:
+    image: redis:7.0
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mysql_data:
+  redis_data:
