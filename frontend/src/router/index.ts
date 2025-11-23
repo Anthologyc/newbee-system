@@ -24,12 +24,12 @@ const router = createRouter({
         {
           path: 'questions',
           name: 'question-list',
-          component: () => import('../views/DashboardView.vue') // 暂时先用 Dashboard 顶替
+          component: () => import('../views/QuestionListView.vue')
         },
         {
           path: 'questions/create',
           name: 'question-create',
-          component: () => import('../views/DashboardView.vue') // 暂时先用 Dashboard 顶替
+          component: () => import('../views/QuestionCreateView.vue')
         },
         {
           path: 'announcements',
