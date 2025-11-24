@@ -51,7 +51,7 @@ const legendDots = computed(() => {
     return ['exam-filled', 'unanswered'];
   }
   // practice and mistake use the same legend
-  return ['wrong', 'correct', 'unanswered'];
+  return ['correct', 'wrong', 'unanswered'];
 });
 </script>
 
