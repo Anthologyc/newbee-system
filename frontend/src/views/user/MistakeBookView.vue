@@ -163,7 +163,7 @@ const submitAnswer = async () => {
   if (!currentQuestion.value) return;
   
   const q = currentQuestion.value;
-  const correctArr = q.answer || [];
+  let correctArr = q.answer || [];
   let userArr = currentSelected.value;
 
   // 判断题特殊处理：如果后端存的是 ["对"]，前端选的是 ["A"]，需要映射
