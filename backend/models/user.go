@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"unique;not null" json:"username"`
-	Password string `json:"password"` // 存加密后的 hash
-	Role     string `json:"role"`     // "admin" 或 "user"
+	Username string `json:"username" gorm:"unique"`
+	Password string `json:"-"` // 存储加密后的密码，不返回给前端
+	Role     string `json:"role" gorm:"default:'user'"` // admin 或 user
 }

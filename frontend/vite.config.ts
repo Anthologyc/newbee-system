@@ -16,6 +16,7 @@ export default defineConfig({
   },
   // 👇 新增 server 配置
   server: {
+    port: 3000,
     proxy: {
       '/api': {
         target: 'http://localhost:8080', // 后端地址
