@@ -48,7 +48,7 @@ defineEmits(['jump']);
 // Legend dots based on variant
 const legendDots = computed(() => {
   if (props.variant === 'exam') {
-    return ['exam-filled', 'unanswered', 'unanswered'];
+    return ['exam-filled', 'unanswered'];
   }
   // practice and mistake use the same legend
   return ['wrong', 'correct', 'unanswered'];
