@@ -54,17 +54,16 @@
 
       <!-- 侧边答题卡 -->
       <div class="sidebar">
-        <a-card title="答题卡" class="sheet-card">
-          <div class="sheet-grid">
-            <div v-for="(q, index) in questions" :key="q.id" class="sheet-item"
-              :class="{ 'filled': isAnswered(q.id), 'active': index === currentIndex }" @click="currentIndex = index">
-              {{ index + 1 }}
-            </div>
-          </div>
-          <a-button type="primary" status="danger" long class="submit-btn" @click="() => handleSubmitConfirm(false)">
-            交卷
-          </a-button>
-        </a-card>
+        <AnswerCard 
+          mode="exam" 
+          :statusList="statusListForCard" 
+          :currentIndex="currentIndex" 
+          :showAccuracy="false"
+          @jump="handleJump" 
+        />
+        <a-button type="primary" status="danger" long class="submit-btn-bottom" @click="() => handleSubmitConfirm(false)">
+          <template #icon><icon-send /></template> 交卷
+        </a-button>
       </div>
     </div>
 
@@ -97,11 +96,11 @@
             <div class="d-ans">
               <div class="ans-row user-err">
                 <span class="label">你的选择:</span>
-                {{ formatAnswer(res.user_answer, getQuestionType(res.question_id)) }}
+                {{ formatAnswer(res.user_answer) }}
               </div>
               <div class="ans-row corr">
                 <span class="label">正确答案:</span>
-                {{ formatAnswer(res.correct_answer, getQuestionType(res.question_id)) }}
+                {{ formatAnswer(res.correct_answer) }}
               </div>
             </div>
 
@@ -128,13 +127,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { IconClockCircle, IconLeft, IconRight, IconSend } from '@arco-design/web-vue/es/icon';
 import { Message, Modal } from '@arco-design/web-vue';
+import AnswerCard from '../../components/AnswerCard.vue';
 
 const route = useRoute();
-const router = useRouter();
 
 const questions = ref<any[]>([]);
 const userAnswers = ref<Record<number, string[]>>({});
@@ -154,6 +153,17 @@ const answeredCount = computed(() => Object.keys(userAnswers.value).length);
 const wrongList = computed(() => {
   return (examResult.value.details || []).filter((item: any) => !item.is_correct);
 });
+
+// Status list for AnswerCard component
+const statusListForCard = computed(() => {
+  return questions.value.map(q => {
+    return isAnswered(q.id) ? 'done' : 'unanswered';
+  });
+});
+
+const handleJump = (index: number) => {
+  currentIndex.value = index;
+};
 // 🚀 辅助函数：判断结果页的选项是否正确（用于高亮）
 const isResultOptionCorrect = (correctArr: string[], key: string, type: string) => {
   if (type === 'judgment') {
@@ -194,7 +204,7 @@ onMounted(async () => {
     const res = await axios.get(`/api/exam/generate?single=${single || 0}&multi=${multi || 0}&judge=${judge || 0}`);
     questions.value = res.data.data || [];
     startTimer();
-  } catch (e) {
+  } catch {
     Message.error('试卷生成失败');
   }
 
@@ -290,7 +300,7 @@ const submitPaper = async () => {
     const res = await axios.post('/api/exam/submit', payload);
     examResult.value = res.data;
     showResultModal.value = true;
-  } catch (e) {
+  } catch {
     Message.error('交卷失败');
   }
 };
@@ -320,7 +330,7 @@ const getQuestionOptions = (qid: number) => {
   return q.options;
 };
 
-const formatAnswer = (ans: string[], type: string) => {
+const formatAnswer = (ans: string[]) => {
   if (!ans || ans.length === 0) return '未答';
   return ans.join('、');
 };
@@ -387,6 +397,9 @@ const prev = () => { if (currentIndex.value > 0) currentIndex.value--; };
 .sidebar {
   width: 280px;
   flex-shrink: 0;
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
 }
 
 .q-card {
@@ -471,40 +484,9 @@ const prev = () => { if (currentIndex.value > 0) currentIndex.value--; };
   border-top: 1px solid #eee;
 }
 
-.sheet-card {
-  position: sticky;
-  top: 20px;
-}
-
-.sheet-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.sheet-item {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f2f3f5;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.sheet-item.filled {
-  background: #165dff;
-  color: #fff;
-}
-
-.sheet-item.active {
-  border: 2px solid #165dff;
-}
-
-.submit-btn {
-  margin-top: 10px;
+.submit-btn-bottom {
+  margin-top: 15px;
+  border-radius: 8px;
 }
 
 .result-page {
@@ -581,12 +563,23 @@ const prev = () => { if (currentIndex.value > 0) currentIndex.value--; };
 }
 
 @media (max-width: 768px) {
+  .exam-paper-container {
+    padding-bottom: 20px;
+  }
+
   .main-layout {
     flex-direction: column;
+    gap: 15px;
+  }
+
+  .question-area {
+    width: 100%;
   }
 
   .sidebar {
-    display: none;
+    width: 100%;
+    position: static;
+    order: 2;
   }
 
   .status-bar {
