@@ -164,6 +164,29 @@ const isResultOptionCorrect = (correctArr: string[], key: string, type: string) 
   // 其他题型直接比对
   return correctArr.includes(key);
 };
+const onGlobalKeydown = (e: KeyboardEvent) => {
+  const target = e.target as HTMLElement;
+  
+  // Ignore if user is typing in input fields
+  if (target.tagName === 'INPUT' || 
+      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'SELECT' ||
+      target.isContentEditable) {
+    return;
+  }
+
+  // Next question shortcuts
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'n' || e.key === 'N') {
+    e.preventDefault();
+    next();
+  }
+  // Previous question shortcuts
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    prev();
+  }
+};
+
 onMounted(async () => {
   const { single, multi, judge } = route.query;
   // 🚀 关键修复：调用新的 generate 接口
@@ -174,9 +197,16 @@ onMounted(async () => {
   } catch (e) {
     Message.error('试卷生成失败');
   }
+
+  // Register keyboard shortcuts
+  window.addEventListener('keydown', onGlobalKeydown);
 });
 
-onUnmounted(() => { if (timer) clearInterval(timer); });
+onUnmounted(() => { 
+  if (timer) clearInterval(timer); 
+  // Unregister keyboard shortcuts
+  window.removeEventListener('keydown', onGlobalKeydown);
+});
 
 const startTimer = () => {
   timer = setInterval(() => {

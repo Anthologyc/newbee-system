@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import { IconCheckCircleFill, IconCloseCircleFill } from '@arco-design/web-vue/es/icon';
 
@@ -94,8 +94,39 @@ const userId = Number(localStorage.getItem('user_id') || 0);
 
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
 
+const onGlobalKeydown = (e: KeyboardEvent) => {
+  const target = e.target as HTMLElement;
+  
+  // Ignore if user is typing in input fields
+  if (target.tagName === 'INPUT' || 
+      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'SELECT' ||
+      target.isContentEditable) {
+    return;
+  }
+
+  // Next question shortcuts
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'n' || e.key === 'N') {
+    e.preventDefault();
+    next();
+  }
+  // Previous question shortcuts
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    prev();
+  }
+};
+
 onMounted(async () => {
   await fetchMistakes();
+  
+  // Register keyboard shortcuts
+  window.addEventListener('keydown', onGlobalKeydown);
+});
+
+onUnmounted(() => {
+  // Unregister keyboard shortcuts
+  window.removeEventListener('keydown', onGlobalKeydown);
 });
 
 const fetchMistakes = async () => {
@@ -132,7 +163,7 @@ const submitAnswer = async () => {
   if (!currentQuestion.value) return;
   
   const q = currentQuestion.value;
-  let correctArr = q.answer || [];
+  const correctArr = q.answer || [];
   let userArr = currentSelected.value;
 
   // 判断题特殊处理：如果后端存的是 ["对"]，前端选的是 ["A"]，需要映射

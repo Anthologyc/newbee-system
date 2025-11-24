@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import AnswerSheet from '../../components/AnswerSheet.vue';
@@ -152,6 +152,29 @@ watch(currentIndex, (newVal) => {
   }
 });
 
+const onGlobalKeydown = (e: KeyboardEvent) => {
+  const target = e.target as HTMLElement;
+  
+  // Ignore if user is typing in input fields
+  if (target.tagName === 'INPUT' || 
+      target.tagName === 'TEXTAREA' || 
+      target.tagName === 'SELECT' ||
+      target.isContentEditable) {
+    return;
+  }
+
+  // Next question shortcuts
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'n' || e.key === 'N') {
+    e.preventDefault();
+    goToNext();
+  }
+  // Previous question shortcuts
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    prev();
+  }
+};
+
 onMounted(async () => {
   const mode = route.params.mode; 
   let url = mode === 'sequential' ? '/api/practice/sequential' : '/api/practice/random';
@@ -173,6 +196,14 @@ onMounted(async () => {
   } catch (e) {
     console.error(e);
   }
+
+  // Register keyboard shortcuts
+  window.addEventListener('keydown', onGlobalKeydown);
+});
+
+onUnmounted(() => {
+  // Unregister keyboard shortcuts
+  window.removeEventListener('keydown', onGlobalKeydown);
 });
 
 // 统一处理选项显示 (修复判断题)
