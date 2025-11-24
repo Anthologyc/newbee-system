@@ -68,6 +68,7 @@
                 <div class="sidebar-wrapper">
                     <AnswerCard 
                         :mode="route.params.mode === 'random' ? 'random' : 'sequential'" 
+                        variant="practice"
                         :statusList="statusList" 
                         :currentIndex="currentIndex" 
                         :showAccuracy="true"

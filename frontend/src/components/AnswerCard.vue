@@ -1,7 +1,12 @@
 <template>
   <div class="answer-card-wrapper">
     <!-- Answer Sheet Grid -->
-    <AnswerSheet :statusList="statusList" :currentIndex="currentIndex" @jump="handleJump" />
+    <AnswerSheet 
+      :statusList="statusList" 
+      :currentIndex="currentIndex" 
+      :variant="variant"
+      @jump="handleJump" 
+    />
     
     <!-- Statistics Card -->
     <a-card class="stats-card" :bordered="false">
@@ -37,10 +42,12 @@ interface Props {
   statusList: string[];
   currentIndex: number;
   showAccuracy?: boolean;
+  variant?: 'practice' | 'exam' | 'mistake';
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  showAccuracy: true
+  showAccuracy: true,
+  variant: 'practice'
 });
 
 const emit = defineEmits<{

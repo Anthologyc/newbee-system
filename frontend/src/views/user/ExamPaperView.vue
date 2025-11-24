@@ -56,6 +56,7 @@
       <div class="sidebar">
         <AnswerCard 
           mode="exam" 
+          variant="exam"
           :statusList="statusListForCard" 
           :currentIndex="currentIndex" 
           :showAccuracy="false"

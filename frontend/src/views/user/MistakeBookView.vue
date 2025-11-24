@@ -82,6 +82,7 @@
       <div class="sidebar-wrapper">
         <AnswerCard 
           mode="mistake" 
+          variant="mistake"
           :statusList="statusList" 
           :currentIndex="currentIndex" 
           :showAccuracy="true"
