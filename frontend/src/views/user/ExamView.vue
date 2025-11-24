@@ -253,7 +253,7 @@ const handleNextAction = async () => {
            question_id: q.id
          });
       } catch {
-        // Error ignored
+        // Silently ignore error - mistake recording is non-critical
       }
     }
 

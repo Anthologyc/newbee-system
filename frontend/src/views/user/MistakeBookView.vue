@@ -234,7 +234,7 @@ const submitAnswer = async () => {
         question_id: q.id
       });
     } catch {
-      // Error ignored
+      // Silently ignore error - removal will be retried on next correct answer
     }
   }
 };

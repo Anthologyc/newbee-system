@@ -204,7 +204,8 @@ onMounted(async () => {
     const res = await axios.get(`/api/exam/generate?single=${single || 0}&multi=${multi || 0}&judge=${judge || 0}`);
     questions.value = res.data.data || [];
     startTimer();
-  } catch {
+  } catch (error) {
+    console.error('Failed to generate exam paper:', error);
     Message.error('试卷生成失败');
   }
 
@@ -300,7 +301,8 @@ const submitPaper = async () => {
     const res = await axios.post('/api/exam/submit', payload);
     examResult.value = res.data;
     showResultModal.value = true;
-  } catch {
+  } catch (error) {
+    console.error('Failed to submit exam:', error);
     Message.error('交卷失败');
   }
 };
