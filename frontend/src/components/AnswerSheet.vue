@@ -3,9 +3,12 @@
     <div class="sheet-header">
       <span class="title">答题卡</span>
       <div class="legend">
-        <span class="dot correct"></span>
-        <span class="dot wrong"></span>
-        <span class="dot normal"></span>
+        <span 
+          v-for="(dotClass, idx) in legendDots" 
+          :key="idx"
+          class="dot" 
+          :class="dotClass"
+        ></span>
       </div>
     </div>
     
@@ -18,7 +21,8 @@
           active: currentIndex === index,
           correct: status === 'correct',
           wrong: status === 'wrong',
-          done: status === 'done'
+          done: status === 'done',
+          'exam-filled': variant === 'exam' && status === 'done'
         }"
         @click="$emit('jump', index)"
       >
@@ -29,12 +33,26 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue';
+
+const props = withDefaults(defineProps<{
   statusList: string[]; 
   currentIndex: number;
-}>();
+  variant?: 'practice' | 'exam' | 'mistake';
+}>(), {
+  variant: 'practice'
+});
 
 defineEmits(['jump']);
+
+// Legend dots based on variant
+const legendDots = computed(() => {
+  if (props.variant === 'exam') {
+    return ['exam-filled', 'unanswered', 'unanswered'];
+  }
+  // practice and mistake use the same legend
+  return ['wrong', 'correct', 'unanswered'];
+});
 </script>
 
 <style scoped>
@@ -42,6 +60,7 @@ defineEmits(['jump']);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   overflow: visible;
+  position: relative;
 }
 
 .sheet-header {
@@ -56,7 +75,8 @@ defineEmits(['jump']);
 .dot { width: 8px; height: 8px; border-radius: 50%; }
 .dot.correct { background: #00b42a; }
 .dot.wrong { background: #f53f3f; }
-.dot.normal { background: #e5e6eb; }
+.dot.unanswered { background: #e5e6eb; }
+.dot.exam-filled { background: var(--exam-blue, #0b63ff); }
 
 .grid-container {
   display: grid;
@@ -80,6 +100,7 @@ defineEmits(['jump']);
 .circle.active { box-shadow: 0 0 0 2px #165dff; color: #165dff; background: #fff; font-weight: bold; }
 .circle.correct { background-color: #00b42a; color: white; }
 .circle.wrong { background-color: #f53f3f; color: white; }
+.circle.exam-filled { background-color: var(--exam-blue, #0b63ff); color: white; }
 
 /* 📱 移动端适配 */
 @media (max-width: 768px) {
