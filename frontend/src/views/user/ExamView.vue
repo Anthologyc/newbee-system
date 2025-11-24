@@ -66,13 +66,13 @@
             <!-- 右侧：答题卡 (移动端会变到底部) -->
             <div class="sidebar-column">
                 <div class="sidebar-wrapper">
-                    <AnswerSheet :statusList="statusList" :currentIndex="currentIndex" @jump="handleJump" />
-
-                    <a-card class="info-card desktop-only" title="练习信息">
-                        <p>模式：{{ route.params.mode === 'random' ? '🎲 随机练习' : '📄 顺序练习' }}</p>
-                        <p>已答：{{ answeredCount }} 题</p>
-                        <p>正确率：{{ accuracy }}%</p>
-                    </a-card>
+                    <AnswerCard 
+                        :mode="route.params.mode === 'random' ? 'random' : 'sequential'" 
+                        :statusList="statusList" 
+                        :currentIndex="currentIndex" 
+                        :showAccuracy="true"
+                        @jump="handleJump" 
+                    />
                 </div>
             </div>
         </div>
@@ -86,9 +86,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
-import AnswerSheet from '../../components/AnswerSheet.vue';
+import AnswerCard from '../../components/AnswerCard.vue';
 import { 
   IconCheckCircleFill, IconCloseCircleFill, IconLeft, IconRight 
 } from '@arco-design/web-vue/es/icon';
@@ -120,13 +120,6 @@ const userId = Number(localStorage.getItem('user_id') || 0);
 // 计算属性
 const currentQuestion = computed(() => questions.value[currentIndex.value]);
 const progressPercent = computed(() => (currentIndex.value + 1) / questions.value.length);
-
-const answeredCount = computed(() => statusList.value.filter(s => s !== 'unanswered').length);
-const accuracy = computed(() => {
-  if (answeredCount.value === 0) return 0;
-  const correctCount = statusList.value.filter(s => s === 'correct').length;
-  return Math.round((correctCount / answeredCount.value) * 100);
-});
 
 const nextButtonText = computed(() => {
   if (!hasCheckedResult.value) return '下一题';
@@ -192,7 +185,7 @@ onMounted(async () => {
     const res = await axios.get(url);
     const list = Array.isArray(res.data.data) ? res.data.data : [];
     questions.value = list;
-    statusList.value = new Array(list.length).fill('unanswered');
+    statusList.value = Array.from({ length: list.length }, () => 'unanswered');
   } catch (e) {
     console.error(e);
   }
@@ -259,7 +252,9 @@ const handleNextAction = async () => {
            user_id: userId,
            question_id: q.id
          });
-      } catch (e) {}
+      } catch {
+        // Silently ignore error - mistake recording is non-critical
+      }
     }
 
     if (isRight) {
@@ -505,10 +500,7 @@ const getTypeName = (type: string) => {
     top: 20px;
 }
 
-.info-card {
-    margin-top: 15px;
-    border-radius: 8px;
-}
+
 
 /* --- 📱 移动端适配 (Max Width 768px) --- */
 @media (max-width: 768px) {
@@ -531,11 +523,7 @@ const getTypeName = (type: string) => {
         /* 放到下面 */
     }
 
-    .desktop-only {
-        display: none;
-    }
 
-    /* 手机上隐藏不重要的信息卡片 */
 
     .question-text {
         font-size: 16px;
